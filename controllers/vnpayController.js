@@ -107,7 +107,7 @@ export const vnpayReturn = async (req, res) => {
     const hmac = crypto.createHmac("sha512", secretKey);
     const signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
 
-    const clientReturnUrlBase = process.env.CLIENT_URL || 'http://tvd2003.id.vn';
+    const clientReturnUrlBase = process.env.CLIENT_URL || 'http://localhost:3000';
     let redirectUrl = `${clientReturnUrlBase}/payment-status`;
     let success = false;
     let message = '';
