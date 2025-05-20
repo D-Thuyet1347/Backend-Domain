@@ -4,7 +4,7 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const placeOrder = async (req, res) => {
-  const frontend_url = process.env.CLIENT_URL || "http://localhost:3000"; // Lấy từ .env hoặc mặc định
+  const frontend_url = process.env.CLIENT_URL || "http://tvd2003.id.vn"; // Lấy từ .env hoặc mặc định
   const userId = req.user?._id; // Lấy userId từ middleware auth
 
   if (!userId) {
