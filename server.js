@@ -64,7 +64,7 @@ if (!fs.existsSync(uploadDir)) {
 
 // Phục vụ thư mục uploads như static files
 app.use('/uploads', express.static('uploads'));
-
+  app.set('trust proxy', true);
 app.listen(port, () => {
   console.log(`server started on http://localhost:${port}`);
 });
