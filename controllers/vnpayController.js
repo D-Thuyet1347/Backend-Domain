@@ -24,71 +24,71 @@ function sortObject(obj) {
     return sorted;
 }
 
-// // Hàm tạo URL thanh toán
-// export const createPaymentUrl = async (req, res) => {
-//     try {
-//         // Lấy thông tin từ request body (orderId, amount,...)
-//         // Thông tin này nên được gửi từ frontend SAU KHI đơn hàng đã được tạo ở trạng thái "Pending VNPAY"
-//         const { orderId, amount, bankCode = '', language = 'vn', orderDescription, orderType = 'other' } = req.body;
+// Hàm tạo URL thanh toán
+export const createPaymentUrl = async (req, res) => {
+    try {
+        // Lấy thông tin từ request body (orderId, amount,...)
+        // Thông tin này nên được gửi từ frontend SAU KHI đơn hàng đã được tạo ở trạng thái "Pending VNPAY"
+        const { orderId, amount, bankCode = '', language = 'vn', orderDescription, orderType = 'other' } = req.body;
 
-//         if (!orderId || !amount || !orderDescription) {
-//             return res.status(400).json({ success: false, message: 'Missing required parameters' });
-//         }
+        if (!orderId || !amount || !orderDescription) {
+            return res.status(400).json({ success: false, message: 'Missing required parameters' });
+        }
 
-//         process.env.TZ = 'Asia/Ho_Chi_Minh'; // Set múi giờ Việt Nam
-//         let date = new Date();
-//         let createDate = moment(date).format('YYYYMMDDHHmmss');
+        process.env.TZ = 'Asia/Ho_Chi_Minh'; // Set múi giờ Việt Nam
+        let date = new Date();
+        let createDate = moment(date).format('YYYYMMDDHHmmss');
 
-//         let ipAddr = req.headers['x-forwarded-for'] ||
-//             req.connection.remoteAddress ||
-//             req.socket.remoteAddress ||
-//             (req.connection.socket ? req.connection.socket.remoteAddress : null);
+        let ipAddr = req.headers['x-forwarded-for'] ||
+            req.connection.remoteAddress ||
+            req.socket.remoteAddress ||
+            (req.connection.socket ? req.connection.socket.remoteAddress : null);
 
-//         let tmnCode = process.env.VNPAY_TMN_CODE;
-//         let secretKey = process.env.VNPAY_HASH_SECRET;
-//         let vnpUrl = process.env.VNPAY_URL;
-//         let returnUrl = process.env.VNPAY_RETURN_URL;
-//         let txnRef = orderId + '_' + createDate; // Đảm bảo mã tham chiếu là duy nhất cho mỗi lần tạo URL
-//         let vnp_Amount = amount * 100; // VNPAY yêu cầu amount * 100
+        let tmnCode = process.env.VNPAY_TMN_CODE;
+        let secretKey = process.env.VNPAY_HASH_SECRET;
+        let vnpUrl = process.env.VNPAY_URL;
+        let returnUrl = process.env.VNPAY_RETURN_URL;
+        let txnRef = orderId + '_' + createDate; // Đảm bảo mã tham chiếu là duy nhất cho mỗi lần tạo URL
+        let vnp_Amount = amount * 100; // VNPAY yêu cầu amount * 100
 
-//         let vnp_Params = {};
-//         vnp_Params['vnp_Version'] = '2.1.0';
-//         vnp_Params['vnp_Command'] = 'pay';
-//         vnp_Params['vnp_TmnCode'] = tmnCode;
-//         vnp_Params['vnp_Locale'] = language;
-//         vnp_Params['vnp_CurrCode'] = 'VND';
-//         vnp_Params['vnp_TxnRef'] = txnRef; // Mã tham chiếu giao dịch (duy nhất)
-//         vnp_Params['vnp_OrderInfo'] = orderDescription; // Thông tin mô tả đơn hàng
-//         vnp_Params['vnp_OrderType'] = orderType; // Loại hàng hóa
-//         vnp_Params['vnp_Amount'] = vnp_Amount;
-//         vnp_Params['vnp_ReturnUrl'] = returnUrl;
-//         vnp_Params['vnp_IpAddr'] = ipAddr;
-//         vnp_Params['vnp_CreateDate'] = createDate;
+        let vnp_Params = {};
+        vnp_Params['vnp_Version'] = '2.1.0';
+        vnp_Params['vnp_Command'] = 'pay';
+        vnp_Params['vnp_TmnCode'] = tmnCode;
+        vnp_Params['vnp_Locale'] = language;
+        vnp_Params['vnp_CurrCode'] = 'VND';
+        vnp_Params['vnp_TxnRef'] = txnRef; // Mã tham chiếu giao dịch (duy nhất)
+        vnp_Params['vnp_OrderInfo'] = orderDescription; // Thông tin mô tả đơn hàng
+        vnp_Params['vnp_OrderType'] = orderType; // Loại hàng hóa
+        vnp_Params['vnp_Amount'] = vnp_Amount;
+        vnp_Params['vnp_ReturnUrl'] = returnUrl;
+        vnp_Params['vnp_IpAddr'] = ipAddr;
+        vnp_Params['vnp_CreateDate'] = createDate;
 
-//         // Thêm bankCode nếu có
-//         if (bankCode !== null && bankCode !== '') {
-//             vnp_Params['vnp_BankCode'] = bankCode;
-//         }
+        // Thêm bankCode nếu có
+        if (bankCode !== null && bankCode !== '') {
+            vnp_Params['vnp_BankCode'] = bankCode;
+        }
 
-//         // Sắp xếp params và tạo query string
-//         vnp_Params = sortObject(vnp_Params);
-//         let signData = qs.stringify(vnp_Params, { encode: false });
+        // Sắp xếp params và tạo query string
+        vnp_Params = sortObject(vnp_Params);
+        let signData = qs.stringify(vnp_Params, { encode: false });
 
-//         // Tạo chữ ký bảo mật
-//         let hmac = crypto.createHmac("sha512", secretKey);
-//         let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-//         vnp_Params['vnp_SecureHash'] = signed;
+        // Tạo chữ ký bảo mật
+        let hmac = crypto.createHmac("sha512", secretKey);
+        let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
+        vnp_Params['vnp_SecureHash'] = signed;
 
-//         // Tạo URL thanh toán hoàn chỉnh
-//         vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
+        // Tạo URL thanh toán hoàn chỉnh
+        vnpUrl += '?' + qs.stringify(vnp_Params, { encode: false });
 
-//         res.json({ success: true, payment_url: vnpUrl });
+        res.json({ success: true, payment_url: vnpUrl });
 
-//     } catch (error) {
-//         console.error("Error creating VNPAY URL:", error);
-//         res.status(500).json({ success: false, message: "Failed to create VNPAY payment URL" });
-//     }
-// };
+    } catch (error) {
+        console.error("Error creating VNPAY URL:", error);
+        res.status(500).json({ success: false, message: "Failed to create VNPAY payment URL" });
+    }
+};
 
 export const vnpayReturn = async (req, res) => {
     let vnp_Params = req.query;
