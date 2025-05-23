@@ -165,12 +165,11 @@ export const vnpayReturn = async (req, res) => {
     }
 };
 
-// Hàm xử lý VNPAY IPN URL (Quan trọng hơn Return URL để xác nhận thanh toán)
+
 export const vnpayIpn = async (req, res) => {
     let vnp_Params = req.query;
     let secureHash = vnp_Params['vnp_SecureHash'];
 
-    // Xóa param hash để kiểm tra chữ ký
     delete vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHashType'];
 
@@ -185,30 +184,25 @@ export const vnpayIpn = async (req, res) => {
     let vnpAmount = parseInt(vnp_Params['vnp_Amount']) / 100; // Lấy số tiền từ VNPAY
 
 
-    // Kiểm tra chữ ký
     if (secureHash === signed) {
         try {
             const order = await orderModel.findById(orderId);
 
-            // 1. Kiểm tra xem đơn hàng có tồn tại không?
             if (!order) {
                 console.log(`VNPAY IPN - Order ${orderId} not found.`);
                 return res.status(200).json({ RspCode: '01', Message: 'Order not found' });
             }
 
-            // 2. Kiểm tra số tiền
             if (order.totalAmount !== vnpAmount) {
                 console.log(`VNPAY IPN - Amount mismatch for Order ${orderId}. Expected: ${order.totalAmount}, Received: ${vnpAmount}`);
                 return res.status(200).json({ RspCode: '04', Message: 'Invalid amount' });
             }
 
-            // 3. Kiểm tra trạng thái đơn hàng đã được xử lý chưa (tránh xử lý IPN nhiều lần)
             if (order.paymentStatus === 'Paid') {
                 console.log(`VNPAY IPN - Order ${orderId} already confirmed as Paid.`);
                 return res.status(200).json({ RspCode: '02', Message: 'Order already confirmed' });
             }
 
-            // 4. Xử lý kết quả giao dịch từ VNPAY
             if (rspCode === '00') {
                 order.paymentStatus = 'Paid';
                 order.orderStatus = 'Đã xác nhận'; // Cập nhật trạng thái phù hợp
@@ -216,9 +210,7 @@ export const vnpayIpn = async (req, res) => {
                 console.log(`VNPAY IPN - Order ${orderId} updated to Paid.`);
                 res.status(200).json({ RspCode: '00', Message: 'Confirm Success' });
             } else {
-                // Giao dịch thất bại hoặc bị hủy
                 order.paymentStatus = 'Failed';
-                // order.orderStatus = 'Đã hủy'; // Cân nhắc cập nhật
                 await order.save();
                 console.log(`VNPAY IPN - Order ${orderId} marked as Failed (RspCode: ${rspCode}).`);
                 // Vẫn trả về '00' cho VNPAY vì đã xử lý IPN thành công (dù giao dịch thất bại)
